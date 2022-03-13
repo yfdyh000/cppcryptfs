@@ -91,7 +91,7 @@ cppcryptfs 使用 OpenSSL 对数据进行实际的加密和解密。
 
 
 ```
-设置 PATH=%LOCALAPPDATA%\bin\NASM;%PATH%
+set PATH=%LOCALAPPDATA%\bin\NASM;%PATH%
 ```
 
 
