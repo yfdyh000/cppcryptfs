@@ -1,214 +1,182 @@
 
 
-Changelog
+更新日志
 ------------
-v1.4.3.11, Jan 3 2022
-* Works with Dokany 2.0.x
-* Add support for longnamemax filesystem flag from gocryptfs.
-* Add settings for flush after write to work around timeout problem
-  when using exFAT.
-* Fix crash when using reverse mode and encountering long filenames
-  without long filenames enabled. Files with too-long names are now ignored
-  if long names are not enabled.
-* Fix incorrect disk space reported when using reverse mode filesystem
-  of whole drive.
-* Add --transform (-M) option for converting full paths from encrypted
-  to unencrypted and vice versa.
-* Display error if user attempts to create filesystem without specifying
-  a password instead of doing nothing.
+v1.4.3.11， 2022-01-03
+* 适用于 Dokany 2.0.x
+* 添加 gocryptfs 的 longnamemax（长文件名字符上限）文件系统标志的支持。
+* 添加“写入后刷新”设置以解决使用 exFAT 时的超时问题。
+* 修复使用反向模式并遇到长文件名但没有启用“长文件名”时的崩溃问题。如果没有启用长文件名但遇到名称过长的文件，现在将忽略。
+* 修复使用反向模式文件系统时报告的磁盘空间不正确。
+* 添加 --transform（-M）选项，用于将完整路径从已加密转换为未加密，或反之。
+* 如果用户尝试创建文件系统而没有指定一个密码，用显示错误代替无任何操作。
 
-v1.4.3.10, Sep 3 2021
-* Noticed previous release was compiled with AES-NI instructions
-  (hardware AES) support disabled.  This release fixes that.
+v1.4.3.10， 九月 3 2021
+* 注意到之前发布的版本禁用了 AES-NI（硬件 AES）指令集。此版本修复了该问题。
 
-v1.4.3.9, Aug 29 2021
-* Change deny other users to be deny other sessions.  This functionality
-  is now based on SessionId instead of Username.
-* Add Deny Services option (deny access from SessionId 0).
-* Add auto-mount functionality contributed by atYuguo
+v1.4.3.9， 八月 29 2021
+* 将“拒绝其他用户”更改为“拒绝其他会话”。此功能现在基于会话 ID 而不是用户名。
+* 添加“拒绝服务”选项（拒绝来自会话 ID 0 的访问）。
+* 添加由 atYuguo 提供的自动挂载功能
 
-v1.4.3.8, Jun 5 2021
-* Make CTRL+T minimize to tray.  Make ALT+F4 work for closing app.
-* Add "Deny other users" setting to prevent other logged-on users
-  from accessing mounted filesystems.
+v1.4.3.8， 六月 5 2021
+* 允许 Ctrl+T 最小化到托盘。Alt+F4 关闭应用程序。
+* 添加“拒绝其他用户”设置以防止其他已登录用户访问已挂载的文件系统。
 
-v1.4.3.7, May 31 2021
-* Close any left over open file or dirctory handles when dismounting a 
-  filesystem (issue #126).
-* Add setting to prompt user when dismounting a filesystem that is still
-  in use (has open file or directory handles).
+v1.4.3.7， 五月 31 2021
+* 卸载文件系统时关闭剩余的已打开文件或目录的句柄（issue #126）。
+* 添加设置，当卸载有已打开的文件或目录句柄而判定仍在使用的文件系统时提示用户。
 
-v1.4.3.6, Feb 7 2021
-* Improve concurrency.
-* Fix tab order in ui.
-* Add 2MB and 4MB options for iobuffer sizes.
-* Increase max number of per-fs threads to 63.
-* Make better use of stack buffers.
+v1.4.3.6， 二月 7 2021
+* 改善并发。
+* 修复用户界面中的 Tab 键顺序。
+* 为缓冲区大小添加 2MB 和 4MB 选项。
+* 每个文件系统的最大线程数增加到 63。
+* 更好地利用堆栈缓冲区。
 
-v1.4.3.5, Dec 6 2020
-* Use fast mounting only if mount point is a drive letter.  
-  It doesn't make sense to poll on an existing dir, and 
-  Dokany signals successful mounting fast if the mount point
-  is a dir.
+v1.4.3.5， 十二月 6 2020
+* 仅当挂载点是驱动器号时才使用快速挂载。  
+   对现有目录进行轮询是没有意义的，并且如果挂载点是一个目录，Dokany 会快速告知挂载成功。
 
-v1.4.3.4, Nov 28 2020
-* Add "enable fast mounting" setting (enabled by default).
-* Make cppcryptfs and cppcryptfsctl wait forever if the named pipe
-  is busy when trying to connect to a running instance of cppcryptfs
-  instead of timing out after 2 seconds.
+v1.4.3.4， 十一月 28 2020
+* 添加“启用快速挂载”设置（默认启用）。
+* 尝试连接到正在运行的 cppcryptfs 实例时，如果命名管道正忙，让 cppcryptfs 和 cppcryptfsctl 无限等待而不是在 2 秒后超时。
 
-v1.4.3.3, Nov 7 2020
-* Add change password, print master key, and recover capabilities 
-  to cppcryptfsctl.
+v1.4.3.3， 十一月 7 2020
+* 添加更改密码、列出主密钥及找回的功能到 cppcryptfsctl.
 
-v1.4.3.2, Oct 10 2020
-* Fix crash in MoveFile when destination directory has corrupt or missing
-  diriv file.
+v1.4.3.2， 十月 10 2020
+* 修复当目标目录的 diriv 文件损坏或丢失时，MoveFile 导致崩溃的问题。
 
-v1.4.3.1, Aug 29 2020
-* Add capability for creating (initializing) filesystems using cppcryptfsctl.
-  (please review command line options because some have changed)
-  
-v1.4.3.0, July 12 2020
-* Add encrypt keys in memory and cache keys in memory settings.
+v1.4.3.1， 八月 29 2020
+* 添加使用 cppcryptfsctl 创建（初始化）文件系统的功能。
+   （请查看命令行选项，因为有些选项已更改）
 
-v1.4.2.3, June 14 2020
-* Fix small memory leak when files are renamed.  Renamed files also 
-  weren't being protected from the race condition mentioned in 1.4.2.0.
+v1.4.3.0， 七月 12 2020
+* 添加设置，在内存中加密密钥、在内存中缓存密钥。
 
-v1.4.2.2, June 6 2020
-* Fix for writing to files that are opened with only append access
-  but not also (random) write access.
-* Build with Dokany 1.4.0.1000.
+v1.4.2.3， 六月 14 2020
+* 修复了重命名文件时的微小内存泄漏问题。重命名的文件也未受到 1.4.2.0 中提到的争用条件的保护。
 
-v1.4.2.1, May 27 2020
-* Fail decryption of file names that contain invalid characters in the plain 
-  text.
-* Use the /guard:cf compilation flag for release builds.  
-* Use the /HIGHENTROPYVA linker option for 64-bit builds
+v1.4.2.2， 六月 6 2020
+* 修复当写入仅打开为“追加”访问权限而没有随机写入权限的文件时出现的问题。
+* 使用 Dokany 1.4.0.1000 构建。
 
-v1.4.2.0, Apr 26 2020
-* Fix race condition revealed by qBittorent
+v1.4.2.1， 五月 27 2020
+* 纯文本文件名包含无效字符时解密失败。
+* 发布版本使用 /guard:cf 编译标志。
+* 64 位构建增加 /HIGHENTROPYVA 链接器选项
 
-v1.4.1.4, Feb 6 2020
-* Fix empty dialog boxes
+v1.4.2.0， 四月 26 2020
+* 修复 qBittorent 揭示的竞争条件
 
-v1.4.1.3, Jan 25 2020
-* Add --csv and -D (list dirs first) options for listing encrypted
-  and plaintext file names from the command line.
+v1.4.1.4， 二月 6 2020
+* 修复空白对话框
 
-v1.4.1.2, Jan 18 2020
-* Make sure path is directory before opening with ShellExecute.
+v1.4.1.3， 一月 25 2020
+* 添加 --csv 和 -D（首先列出目录）选项用于在命令行中列出加密的纯文本的文件名。
 
-v1.4.1.1, Jan 18 2020
-* Add setting to automatically open files system upon mounting.
+v1.4.1.2， 一月 18 2020
+* 使用 ShellExecute 打开前检查确保路径是目录。
 
-v1.4.1.0, Jan 11 2020
-* use name pipe for passing command line to cppcryptfs and results
-  back to caller.  
-* Add cppcryptfsctl.
+v1.4.1.1， 一月 18 2020
+* 添加设置用于挂载时自动打开文件系统。
 
-v1.4.0.29, Dec 26 2019
-* Compile with Microsoft Visual Studio 2019 (instead of 2017)
-  Build with Dokany 1.3.1.1000
+v1.4.1.0， 一月 11 2020
+* 使用命名管道将命令行传递给 cppcryptfs 并将结果返回给调用者。
+* 添加 cppcryptfsctl。
 
-v1.4.0.28, Oct 26 2019
-* Return (NTSTATUS version of) ERROR_INVALID_NAME instead of
-  (NTSTATUS version of) ERROR_FILE_NOT_FOUND when asked
-  to open files with wildcard chars (* or ?) in them to fix
-  globbing issue with Windows CMD.exe.
+v1.4.0.29， 十二月 26 2019
+* 使用 Microsoft Visual Studio 2019 代替 VS 2017 进行编译
+   使用 Dokany 1.3.1.1000 构建
 
-v1.4.0.27, Aug 11 2019
-* Build with Dokany 1.3.0.1000
-* Add option to disable named streams when creating filesystem.
+v1.4.0.28， 十月 26 2019
+* 用通配符（* 或 ?）打开文件时返回（NTSTATUS 版本的）ERROR_INVALID_NAME 而不是（NTSTATUS 版本的）ERROR_FILE_NOT_FOUND，以修复 Windows CMD.exe 的 glob 通配符问题。
 
-v1.4.0.26, Jul 7 2019
-* Add setting to enable auto-delete of desktop.ini files (issue #62)
-* Show Dokany version on about tab
+v1.4.0.27， 八月 11 2019
+* 使用 Dokany 1.3.0.1000 构建
+* 添加选项用于在创建文件系统时禁用命名流。
 
-v1.4.0.25, Mar 17 2019
-* Fix issues with TeraCopy and launching some programs from container
-* Add double-click on mounted volume opens explorer feature
+v1.4.0.26， 七月 7 2019
+* 添加设置用于自动删除 desktop.ini 文件（issue #62）
+* 在“关于”选项卡中显示 Dokany 版本
 
-v1.4.0.24, Jan 13 2019
-* First binary 32-bit release (was only 64-bit before)
+v1.4.0.25， 三月 17 2019
+* 修复从容器启动 TeraCopy 等程序的问题
+* 添加双击已挂载的卷打开文件浏览器的功能
 
-v1.4.0.23, Jan 6 2019
-* Build with Dokany 1.2.2.2000
+v1.4.0.24， 一月 13 2019
+* 发布首个 32 位版本（之前只有 64 位版本）
 
-v1.4.0.22, Oct 6 2018
-* Add "never save history" option to settings
-* Unmount all filesysystems when Windows session is ending
+v1.4.0.23， 一月 6 2019
+* 使用 Dokany 构建 1.2.2.2000
 
-v1.4.0.21, Sep 3 2018
-* Allow A: to be used for mounting.  Works since Dokany 1.2.0.1000
+v1.4.0.22， 十月 6 2018
+* 设置中添加“不保存历史记录”选项
+* 在 Windows 会话结束时卸载所有文件系统
 
-v1.4.0.20, Sep 1 2018
-* Fix unhandled exception if started with command line options from a windows program that does not have a console and there is an error mounting the fs.
+v1.4.0.21， 九月 3 2018
+* 允许 A: 用于挂在。自 Dokany 1.2.0.1000 起有效
 
-v1.4.0.19, Aug 19 2018
-* Remove restriction that filesystems mounted with an empty NTFS direcory as the mount
-  point must be mounted case-insensitive.  Also remove similar restriction that reverse-
-  mode filesystems cannot be mounted using empty NTFS directory as the mount point (for
-  the reason that reverse-mode filesystems must be case-sensitive).  This was done 
-  because Dokany 1.2 fixes the gratuitous uppercasing of filenames that was happening
-  when an empty NTFS directory is used as the mount point.
-  
-v1.4.0.18, Aug 16 2018
-* Compile and link with Dokany 1.2.0.1000
+v1.4.0.20， 九月 1 2018
+* 修复未处理的异常，出现于使用一个没有控制台的 Windows 程序用命令行选项启动并且挂载文件系统时出错。
 
-v1.4.0.17, Jul 8 2018
-* Fix problem with mounting encrypted filesystems from UNC paths.
+v1.4.0.19， 八月 19 2018
+* 解除使用空 NTFS 目录作为挂载点时挂载的文件系统必须不区分大小写的限制。
+   反向模式的文件系统不能使用空 NTFS 目录作为挂载点的限制一并解除（原因为反向模式的文件系统必须区分大小写）。
+   以上是因为 Dokany 1.2 修复了 NTFS 目录作为挂载点时文件名无端大写化的问题。
 
-v1.4.0.16, Jun 10, 2018
-* Change /d2guardspecload to /Qspectre.  /Qspectre is now the preferred compiler
-  flag for Spectre vulnerability mitigation according to Microsoft.
-* Improve error messages if an error occurs during unmounting.
-* Fix typos in messages and documentation.
+v1.4.0.18， 八月 16 2018
+* 链接并使用 Dokany 1.2.0.1000 版本编译
 
-v1.4.0.15, Apr 05, 2018
-* Fix bug preventing changing volume name if separate config file is used.
-* Integrate @mhogomchungu's RAII code to fix leak on error condition in 
-  cryptconfig::write_volume_name().
-* Add additional checks to verify integrity of re-written config file in 
-  cryptconfig::write_volume_name().
+v1.4.0.17， 七月 8 2018
+* 修正从 UNC 路径挂载已加密文件系统的问题。
 
-v1.4.0.14, Mar 17, 2018
-* Fix typo in settings dialog
+v1.4.0.16， 六月 10， 2018
+* 将 /d2guardspecload 更改为 /Qspectre。根据微软的说法，/Qspectre 现在是首选的缓解 Spectre 漏洞的编译器标志。
+* 改进卸载过程中发生错误时的错误消息。
+* 修正消息和文档中的拼写错误。
 
-v1.4.0.13, Mar 16, 2018
-* Add properties right-click menu item and -i for showing info about
-  mounted filesystems.
+v1.4.0.15，2018-04-05
+* 修复使用单独的配置文件时阻止更改卷名（卷标）的错误。
+* 集成 @mhogomchungu 的 RAII 代码，以修复 cryptconfig::write_volume_name() 在错误条件下的泄漏。
+* 添加额外的检查，在 cryptconfig::write_volume_name() 中验证重写的配置文件的完整性。
 
-v1.4.0.12, Feb 19, 2018
-* Use MountPointManager class to manage mounted filesystems.
+v1.4.0.14， 三月 17， 2018
+* 修正设置对话框中的拼写错误
 
-v1.4.0.11, Feb 16, 2018
-* Allow mounting using an empty dir mount point from command line even if that dir wasn't previously configured as a mount point in the ui.
+v1.4.0.13， 三月 16， 2018
+* 添加右键菜单项-属性和 -i 参数，用于显示已挂载文件系统的相关信息。
 
-v1.4.0.10, Feb 6, 2018
-* Support use of empty directory as a mount point instead of using a drive letter.
+v1.4.0.12， 二月 19， 2018
+* 使用 MountPointManager 类来管理已挂载的文件系统。
 
-v1.4.0.9, Jan 30, 2018
-* Start using the /d2guardspecload compiler flag which Microsoft recommends for mitigating one variant of the Spectre vulnerability.
+v1.4.0.11， 二月 16， 2018
+* 允许在命令行中使用一个空目录作为挂载点，即使该目录以前没有在用户界面中配置为挂载点。
 
-v1.4.0.8, Dec 15, 2017
-* Link with Dokany 1.1.0.
+v1.4.0.10， 2018年2月6日
+* 支持使用空目录代替驱动器号作为挂载点。
 
-v1.4.0.7,  Nov 21, 2017 
-* Code reorg.
+v1.4.0.9， 一月 30， 2018
+* 开始使用 /d2guardspecload 编译器标志，微软推荐使用该标志用于缓解 Spectre 漏洞的一个变体。
 
-v1.4.0.6 Nov 09, 2017
-* Fix findstreams on virtual files in reverse mode.
+v1.4.0.8， 十二月 15， 2017
+* 链接 Dokany 1.1.0。
 
-v1.4.0.5 Nov 02, 2017
- * bump version for release with sha256 code-signing signature in addtion to sha1
- 
-v1.4.0.4 Oct 13, 2017
-* ask before deleting saved passwords
+v1.4.0.7， 十一月 21， 2017
+* 代码重组。
 
-v1.4.0.3 Oct 2, 2017
-* saved passwords
+v1.4.0.6 11月 09， 2017
+* 修复反向模式中在虚拟文件上查找流。
 
-This changelog was unfortunately started belatedly...
+v1.4.0.5 11月 02， 2017
+* 发布包含 SHA256 代码签名的版本，补充 sha1
+
+v1.4.0.4 十月 13， 2017
+* 删除保存的密码前询问
+
+v1.4.0.3 十月 2， 2017
+* 保存密码
+
+更新日志姗姗来迟。没有更早的记录。
 

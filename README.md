@@ -1,236 +1,224 @@
-![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
+![MIT 许可协议](https://img.shields.io/badge/license-MIT-blue.svg)
 ==============
 
 cppcryptfs
 ------
 
-cppcryptfs is based on the design of [gocryptfs](https://github.com/rfjakob/gocryptfs), an encrypted overlay filesystem written in Go.
+cppcryptfs 基于 [gocryptfs](https://github.com/rfjakob/gocryptfs) 设计，而 gocryptfs 是用 Go 语言编写的一个叠加式加密文件系统。
 
-cppcryptfs is an implementation of the gocryptfs filesystem in C++ for Windows.  cppcryptfs is compatible with gocryptfs.  Filesystems created with one can generally be mounted (and synced) with the other.   Please see the statement on compatibility near the end of this document.
+cppcryptfs 是使用 C++ 编写的一个面向 Windows 系统实现的 gocryptfs 文件系统。cppcryptfs 与 gocryptfs 兼容。这两种工具创建的文件系统通常可以相互挂载和同步。详见本文档末尾的兼容性声明。
 
-cppcrypts provides on-the-fly, at-rest and in-the-cloud encryption of files and file names in a virtual filesystem.  It uses the [Dokany](https://github.com/dokan-dev/dokany) driver and library to provide a virtual fileystem in user mode under Windows.
-
-
-You can use cppcryptfs to create an encrypted filesystem in a folder.  The encrypted filesystem is protected with a password that you choose.  
-
-When you use cppcryptfs to mount the encrypted filesystem by providing the password, then you have a new drive letter in Windows.  This virtual drive letter gives you an unencrypted view of your files.  The encryption and decryption are done on the fly and are transparent to applications that use the files on that virtual drive.
-
-After you tell cppcryptfs to dismount the virtual drive letter, then there is no way to get at your unencrypted data unless the filesystem is re-mounted again using your password.  
-
-Shutting down your computer automatically dismounts all cppcryptfs drive letters.
-
-If the folder where the encrypted files are kept is being synced with a cloud service, then only the encrypted files with encrypted file names will be uploaded to the cloud service.
-
-This way, neither the employees of the cloud service nor anybody who hacks into the cloud service can use your files.
-
-Also, if someone steals your computer and the encrypted filesystem is not mounted, then the thief cannot use your files.
-
-Because the encryption is done on a per-file basis instead of using a container file to store the data, you do not have to decide ahead of time how much encrypted storage you will need.  cppcryptfs has very minimal storage overhead, and your encrypted filesystem can grow dynamically limited only by the amount of free space on the physical drive on which the encrypted filesystem is located.
-
-Another advantage of per-file encryption over container-based encryption is that per-file encryption syncs very quickly and efficiently with cloud-based services.
+cppcrypts 在一个虚拟文件系统中为文件和文件名提供动态、静态和云存储中加密的能力。它使用 [Dokany](https://github.com/dokan-dev/dokany) 驱动程序和程序库在 Windows 的用户模式下提供该虚拟文件系统。
 
 
-Current Status
+您可以通过 cppcryptfs 在文件夹中创建一个加密的文件系统。加密的文件系统使用您选择的密码来保护。
+
+当您使用 cppcryptfs 并提供密码来挂载加密的文件系统时，Windows 中会新增一个驱动器号（盘符）。这个虚拟的驱动器号为您提供里面文件的未加密视角。加密和解密会动态完成，并且对使用该虚拟驱动器中的文件的应用程序来说是透明的（无感知）。
+
+在告知 cppcryptfs 卸载该虚拟驱动器号后，除非再使用您的密码来重新挂载该文件系统，否则不能再访问未加密的数据。
+
+关闭计算机时将自动卸载所有 cppcryptfs 驱动器号。
+
+如果保存着已加密文件的文件夹使用了文件云同步服务，只会将加密状态的文件（文件名和文件数据均已加密）上传到云服务。
+
+因此，云存储服务的员工或者侵入的黑客等任何人都无法访问您的文件内容。
+
+此外，如果有人窃取了您的计算机，并且此时没有挂载加密的文件系统，则窃贼也无法访问您的文件。
+
+由于这种加密采用按文件管理，而不是使用容器文件来存储数据，因此您不必提前决定加密存储要占用多少磁盘空间。cppcryptfs 只有非常小的存储开销，并且加密文件系统的空间可以动态增长，只受所在磁盘分区的可用空间限制。
+
+与基于容器的加密相比，按每个文件加密还有一个优点，它可以非常快速且有效地配合云同步存储服务的机制。
+
+
+当前状态
 --------------
 
-The developer has been using cppcryptfs in forward (normal) mode for over three years and hasn't lost
-any data.  At least one other person is using it.
+开发者使用 cppcryptfs 的正向（正常）模式超过3年，没有丢失任何数据。有至少一个人在使用该项目。
 
-Reverse mode has undergone only limited testing by the developer.
+反向模式仅经过开发者的有限测试。
 
-Binary releases signed by the developer, Bailey Brown Jr, are on the [releases page](https://github.com/bailey27/cppcryptfs/releases).
-
-
-It is always prudent to keep backups of your data in case something goes wrong. 
-
-Testing
--------  
-
-cppcryptfs passes 506/506 tests in [winfstest](https://github.com/bailey27/winfstest) when run as administrator.  Without administrator privileges, cppcryptfs passes 500/506 tests.  This winfstest is forked from the version
-used by the Dokany project.  The Dokany team added additional tests.
-
-The tests that cppcryptfs fails when run without administrator privileges have to do with operations on DACLs (Discretionary Access Control Lists).  cppcryptfs must be run as administrator for these operations to work.  Running without administrator privileges doesn't seem to affect the normal usage of cppcryptfs.
-
-Note: It appears that Windows 10 Version 1909 (OS Build 18363.1016) allows cppcryptfs to pass all 506 tests without having to be run as administrator.
+[发布页面](https://github.com/bailey27/cppcryptfs/releases)中提供了由开发人员 Bailey Brown Jr 签名的二进制（可执行）文件。
 
 
-Build Requirements
------
-	
-	Microsoft Visual Studio 2019 Community Edition, perl, nasm, and git (all free)
-	OpenSSL - https://github.com/openssl/openssl (static build required)
-	RapidJSON - https://github.com/miloyip/rapidjson (for parsing gocryptfs.conf)
-	Dokany - https://github.com/dokan-dev/dokany
+慎重地保留数据备份始终是明智的，以防出现意外问题。
 
-	For Dokany, you probably want to use the binary distribution from here:
-		https://github.com/dokan-dev/dokany/releases
-	(be sure to select "install development files" in the installer options)
-
-
-
-There are detailed build instructions in [INSTALL.md](INSTALL.md).
-
-cppcryptfs is currently up-to-date with Dokany 2.0.0.2000
-
-
-Use
+测试
 -------
 
-cppcryptfs doesn't require administrator privileges to run, but
-if it is not running as administrator, then it won't be able
-to acquire the SE_SECURITY_NAME privilege.  SE_SECURITY_NAME is
-needed for some operations performed by the Windows API functions SetFileSecurity() and GetFileSecurity().
+以管理员权限运行时，cppcryptfs 在 [winfstest](https://github.com/bailey27/winfstest) 中通过了 506/506 项测试。以非管理员权限运行时，cppcryptfs 通过了 500/506 项测试。Dokany 团队增加了额外的测试。
 
-cppcryptfs seems to work without SE_SECURITY_NAME.  If you do
-run into problems, then you can try running cppcryptfs as adminstrator and see if that helps.
+在不使用管理员权限运行时，cppcryptfs 未通过的测试与 DACL（自主访问控制列表）操作有关。cppcryptfs 以管理员权限运行时，才能正常完成这些操作。不使用管理员权限运行的情况下，似乎不会影响到 cppcryptfs 的正常使用。
 
-To make a new encrypted virtual fileystem, first click the "Create" tab.
-
-![Alt text](/screenshots/screenshot_create.png?raw=true "Create tab")
-
-You need to find or create a directory to be the root of your filesystem.  You can create a directory in the directory selector in the UI.
-
-If you are using normal (forward) mode, then this directory must be empty.
-
-If you are using reverse mode, then the directory need not be empty (see the section on Reverse Mode in this document which follows this section).
-
-It is strongly recommended that this directory reside on an NTFS filesystem.
-
-Then you need to choose a (hopefully strong) password and repeat it.  The dialog box will accept at most 255 characters for the password.
-
-The password field class treats one character as special. This character looks like a small x, but not the same. It's unicode 215 which is 0xd7 in hex.
-
-The result is you cannot use that character in a password.
-
-You can choose to have your file names encryped using AES256-EME or not to encrypt the file names (plain text).
-
-If "Long file names" is checked, then the names of files and directories can be up to 255 characters long when encrypted file names are used.  This option has no effect if plain text file names are used (plain text file names can be up to 255 characters long). See the section "File name and path length limits" near the end of this document for more information.  
-
-If a "Long name max" value that is less than 255 is selected (minimum value is 62), then cppcryptfs will limit filename length.  Even when 62 is selected, file names created will be up to 67 characters long.  This option is useful when using cloud services that have problems with filenames that are above a certain length.
-
-You can choose between AES256-GCM or AES256-SIV (RFC 5297) for file data encryption.  The default is AES256-GCM which is recommended. GCM is about twice as fast as SIV for streaming reads and writes.  SIV was implemented in order to support reverse mode. 
-
-Note: In the gocryptfs documentation, the SIV mode is referred to as AES-512-SIV, which is the proper name for this mode of operation. However, it is called AES256-SIV in cppcryptfs because the 512-bit SIV key is derived from the 256-bit master key (as is the case with gocryptfs).  Also, the developer of cppcryptfs doesn't want to call it AES512-SIV in the user interface because that might cause users to think that it is more secure than AES256-GCM.
-
-If you check Reverse then you will be creating a Reverse Mode filesystem.  See the section in this document about Reverse Mode for more information.
-
-If you wish, you can specifiy a config file.  This is the file that contains the settings for the filesystem and also the random 256-bit AES master key that is encrypted using your password.  The config file file can be kept outside the encrypted filesystem for an extra degree of security.
-
-When you click on the "Create" button, config file will be created. It will be created as gocryptfs.conf in the root directory of the encrypted filesystem unless you specified an alternate config file.  Unless you choose to use plain text file names, a gocryptfs.diriv will also be created there.  Be sure to back up these files in case they get lost or corrupted.  You won't be able to access any of your data if something happens to gocryptfs.conf.  gocryptfs.conf will never change for the life of your filesystem unless you change the volume label (see bellow).
-
-If you choose to give the volume a label, then the label will be encrypted in gocryptfs.conf.  The maximum volume label length is 32 characters. 
-
-The volume label is AES256-GCM encrypted using the master key and a 128-bit random initialization vector and 8 zero bytes of auth data.  Then it is base64 encoded along with the initilization vector and saved in gocryptfs.conf.
-
-You can right click on the mounted drive letter in File Explorer, select "Properties", and change the volume label.  However, doing so will cause cppcryptfs to re-write gocryptfs.conf when the drive is dismounted. This does entail some risk to your gocryptfs.conf.  Again, it's a good a idea to back up your gocryptfs.conf file somewhere.  
-
-The "Disable named streams" option may be needed if the underlying filesystem (e.g. a Linux filesystem shared via Samba) does not support named streams.  cppcryptfs normally automatically detects (at mount time) if the underlying filesystem supports named streams. However, in some configurations, the underlying filesystem is reporting that it supports named streams when it actually does not.  The developer has tested with Ubuntu 16.04 Samba and does not have this problem.  This feature was added to help a user who was having this problem with a different Linux version.  Please see https://github.com/bailey27/cppcryptfs/issues/63 if you are having issues with Samba and would like to retro-actively disable named streams after creating your filesystem.
-
-Then go to the "Mount" tab and select a drive letter and select the folder you
-just created the filesystem in.  Then enter the password and click on the "Mount" button.
-
-![Alt text](/screenshots/screenshot_mount.png?raw=true "Mount tab")
-
-You can also right-click in the list of drive letters and select "Add Mount Point".  This will let you add an empty directory to the list of drive letters.  This empty directory, which must be on an NTFS volume, can serve as a mount point in place of a drive letter.  The added mount point will be added to the list below the drive letters.  You can also right click on an added mount point and delete it from the list.  The mount point directories you add are saved in the Windows registry.
-
-NOTE: Though A: and B: are useable as mount points, it is not recommended to use them because mounting an encrypted filesystem to them has been known to cause problems with Windows Update.
-
-You can also right-click on a mounted filesystem and dismount it or [view its properties.](/screenshots/screenshot_properties.png?raw=true) 
-
-Double-clicking on a mounted volume will open a File Explorer window on it.
-
-If you specified a custom path for the config file when you created the filesystem, then you must specify it here also.
-
-If you specified a custom path for the config file, you must also select "reverse" if it is a reverse filesystem.  Otherwise, cppcryptfs will automatically detect if the filesytem should be mounted in forward or reverse mode.
-
-Note:  cppcryptfs uses the path to the encrypted filesystem as a key for rembering the custom path to the config file (if there is one) and other settings like reverse and read only.  So when you select a path to mount, be sure to verify that these settings are what you wish to use this time.
+注意：Windows 10 版本 1909（操作系统内部版本 18363.1016）似乎允许 cppcryptfs 通过完整的 506 项测试，而无需以管理员权限运行。
 
 
-After you mount the filesystem, you will then have a new drive letter, and you can use it like a normal drive letter and store your sensitive information there.  The data is encrypted and saved in files in the folder you specified.
+构建所需环境
+-----
 
-If you check "Read-only", then the filesystem will be mounted read-only (write-protected).
+    Microsoft Visual Studio 2019 社区版、perl、nasm 和 git（全部免费）
+    OpenSSL - https://github.com/openssl/openssl（需要静态构建）
+    RapidJSON - https://github.com/miloyip/rapidjson （用于解析 gocryptfs.conf）
+    Dokany - https://github.com/dokan-dev/dokany
 
-For an explanation of how saved passwords work in cppcryptfs, please see the section on "Saved Passwords" below.
+    对于 Dokany，您也许愿意使用下列位置中分发的二进制版本：
+    	https://github.com/dokan-dev/dokany/releases
+    注：务必在安装程序选项中选择“安装开发文件”（"install development files"）
 
-If you check "Auto mount" (which needs a saved password to work), then the next time you start cppcryptfs, that path will be mounted to that mount point upon startup.  You must have saved the password for that mount for this to work.  
 
-The path will continue to automount until you manually mount it wwith "Auto mount" unchecked.
 
-For technical details of the cryptographic design of gocryptfs, please visit
-the [gocryptfs project page](https://github.com/rfjakob/gocryptfs).
+[INSTALL.md](INSTALL.md) 文件中有详细的构建步骤说明。
 
-When you are finished using the drive letter, go to the "Mount" tab and select the drive letter and click on "Dismount" or click "Dismount All".  The drive letter(s) will be dismounted, and the encryption keys will be erased from memory. 
+cppcryptfs 目前使用（发布时）最新的 Dokany 2.0.0.2000 版本
 
-You can mount as many gocryptfs filesystems as you have unused drive letters available.
 
-Passwords and keys are locked in memory using VirtualLock(). When they are no longer needed, they are erased using SecureZeroMemory() and then unlocked.  If you never hibernate your computer, then you don't have to worry about your passwords or keys ever being written to the hard drive.
+使用
+-------
 
-If you close the cppcryptfs window, then it will hide itself in the system tray. To exit cppcryptfs, use the Exit button on the mount page or the context menu of the system tray icon.
+cppcryptfs 不需要管理员权限即可运行，但如果它没有管理员权限，将无法获得 SE_SECURITY_NAME 特权。Windows API 函数 SetFileSecurity() 和 GetFileSecurity() 执行某些操作时需要 SE_SECURITY_NAME 特权。
 
-Settings
+cppcryptfs 似乎能在没有 SE_SECURITY_NAME 的情况下正常运行。但如果您遇到了问题，您可以尝试以管理员权限运行 cppcryptfs，看问题是否解决。
+
+要创建新的加密的虚拟文件系统，先单击“创建”选项卡。
+
+![Alt text](/screenshots/screenshot_create.png?raw=true "创建选项卡")
+
+您需要找到或创建一个目录作为新建的文件系统的根目录。您可以在目录选择器界面中创建一个目录。
+
+如果要使用的是正常（正向）模式，则该目录必须为空。
+
+如果要使用的是反向模式，则该目录不应为空。详见本文档中有关“反向模式”章节。
+
+强烈建议将目录放在 NTFS 文件系统中。
+
+然后，您需要选用一个尽量强的密码并二次输入确认无误。对话框最多允许 255 个字符的密码。
+
+该密码框有个怪癖，它将 U+00D7 字符作为保留字符。此字符看起来像一个小写 x，但不相同。
+
+因此不能在密码中使用该字符。
+
+您可以选择使用 AES256-EME 加密文件名，也可以选择不加密文件名（纯文本，即明文）。
+
+如果选中“长文件名”，则在使用加密文件名时，文件和目录的名称长度最多为 255 个字符。如果使用纯文本文件名，则此选项无效果，但纯文本文件名的长度最多也为 255 个字符。更多细节详见本文档末尾的“文件名和路径长度限制”章节。
+
+如果选用小于 255 个字符的“长文件名上限”（"Long name max"）（最小值为 62），则 cppcryptfs 将限制文件名长度。即使选用 62 个字符，创建的文件名也是最多为 67 个字符。此选项适合搭配对文件名长度上限有要求的云服务。
+
+您可以选用 AES256-GCM 或 AES256-SIV（RFC 5297）进行文件数据加密。默认为 AES256-GCM，推荐使用。GCM 在流式传输的读取和写入方面的速度约是 SIV 的两倍。实现 SIV 是为了支持反向模式。
+
+注意：在 gocryptfs 文档中，SIV 模式称为 AES-512-SIV，这是此操作模式的专有名称。但是，它在 cppcryptfs 中称为 AES256-SIV，因为 512 位 SIV 密钥派生自 256 位主密钥（与 gocryptfs 的情况相同）。并且，cppcryptfs 的开发者不想在用户界面中将其称为 AES512-SIV，因为这可能导致用户误认为它比 AES256-GCM 更安全。
+
+如果选中反向（Reverse），那么您将创建一个“反向模式”文件系统。详细信息见本文档中有关反向模式的章节。
+
+如果您愿意，可以指定一个配置文件。配置文件中包含文件系统的设置，以及使用您的密码来加密的随机的 256 位 AES 主密钥。配置文件也可以保存在加密文件系统之外以提高安全性。
+
+配置文件将在您单击“创建”按钮时被创建。它将在加密文件系统所在的根目录中创建为 gocryptfs.conf，除非您另有指定。除非您选择使用纯文本文件名，否则还将在那里创建一个 gocryptfs.diriv 文件。请务必备份这些文件，以防它们丢失或损坏。如果 gocryptfs.conf 发生问题，您将无法访问任何数据。gocryptfs.conf 在文件系统的整个生命周期内永远不会更改，除非您更改卷标（详见下文）。
+
+如果您选择为卷指定一个卷标签，该标签将在 gocryptfs.conf 中加密存储。卷标最大长度为 32 个字符。
+
+卷标是使用主密钥、128 位随机初始化向量和 8 个零字节的验证数据进行 AES256-GCM 加密。然后将其与初始向量一起进行 base64 编码并保存在 gocryptfs.conf 文件。
+
+您可以在文件资源管理器中右击已挂载的盘符，选择“属性”，然后更改卷标。但是，这样做将导致 cppcryptfs 在卸载驱动器时重写 gocryptfs.conf。这确实会给您的 gocryptfs.conf 带来一些风险。同样，在某个地方备份 gocryptfs.conf 文件是个好主意。
+
+如果底层文件系统（例如，通过 Samba 共享的 Linux 文件系统）不支持命名流，则可能需要“禁用命名流”选项。 cppcryptfs 通常会（在挂载时）自动检测底层文件系统是否支持命名流。但是，在某些配置中，底层文件系统报告它支持命名流，但实际上不支持。开发人员使用 Ubuntu 16.04 Samba 进行了测试，没有发现这个问题。添加此功能是为了帮助使用其他 Linux 版本时遇到此问题的用户。如果您在使用 Samba 时出现问题，并希望在创建文件系统后以追溯方式禁用命名流，请参阅 https://github.com/bailey27/cppcryptfs/issues/63。
+
+然后转到“挂载”选项卡，选择一个盘符，并选择您的文件夹刚在其中创建了文件系统的文件夹。然后输入密码，并单击“挂载”按钮。
+
+![Alt text](/screenshots/screenshot_mount.png?raw=true "挂载选项卡")
+
+您也可以右击盘符列表，然后选择“添加挂载点”。这时您可以将一个空目录添加到盘符列表中。该空目录必须位于 NTFS 卷上，可以代替盘符作为挂载点使用。添加的挂载点将追加到原有列表的下方。您还可以右击已添加的挂载点然后选择将其从列表中删除。您手动添加的挂载点同样记录在 Windows 注册表中。
+
+注意：虽然 A: 和 B: 可用作挂载点，但不建议使用它们，因为已知将加密文件系统挂载到它们会导致 Windows 更新出现问题。
+
+您也可以右击已挂载的文件系统，然后卸载它或[查看其属性](/screenshots/screenshot_properties.png?raw=true)。
+
+双击已挂载的卷为其打开一个文件资源管理器窗口。
+
+如果在创建文件系统时指定了自定义路径的配置文件，则还必须在此处指定相应路径。
+
+如果为配置文件指定了自定义路径，则还必须手动指定是否为“反向”文件系统。默认配置文件下，cppcryptfs 能自动检测文件系统应该以正向还是反向模式挂载。
+
+注意：cppcryptfs 使用加密后文件系统的路径作为键值来记忆配置文件的自定义路径（如已设置）和其他设置（如反向模式和只读）。因此，在选择要挂载的路径时，务必验证检查显示的设置是否是您本次所需的设置。
+
+
+挂载文件系统后，您将看到一个新的盘符，您可以像盘符一样使用，并且在里面存储敏感信息。数据经过加密并以文件形式保存在您指定的文件夹中。
+
+如果选中“只读”，则该文件系统以只读（写保护）模式挂载。
+
+有关 cppcryptfs 中密码保存的工作原理，详见下文“密码保存”章节。
+
+如果您选中“自动挂载”（需要“保存密码”），则下次启动 cppcryptfs 时，该路径将在启动时被挂载到该挂载点。必须已保存该挂载的密码才能正常工作。
+
+该路径将继续自动挂载，直至您取消“自动挂载”并且手动挂载它。
+
+有关 gocryptfs 加密算法设计的技术细节，请访问 [gocryptfs 项目页面](https://github.com/rfjakob/gocryptfs)。
+
+使用完毕后，转到“挂载”选项卡并选择相应驱动器号，然后单击“卸载”或“全部卸载”。这样将卸载驱动器号，并擦除内存中的加密密钥。
+
+只要有未占用的驱动器号（盘符），您可以挂载尽可能多的 gocryptfs 文件系统。
+
+密码和密钥使用 VirtualLock() 锁定在内存中。当不再需要时将使用 SecureZeroMemory() 擦除，然后解锁。如果您从不“休眠”计算机，更不必担心密码或密钥被写入硬盘。
+
+关闭 cppcryptfs 窗口时将隐藏自身到系统托盘。如果要退出 cppcryptfs，使用挂载页面上的“退出”按钮，或者系统托盘中图标的右键菜单。
+
+设置
 ---------
-There is also a settings tab.  
+软件有一个设置选项卡。
 
-![Alt text](/screenshots/screenshot_settings.png?raw=true "Settings tab")  
-*Recommended settings shown*
+![Alt text](/screenshots/screenshot_settings.png?raw=true "“设置”选项卡")  
+*显示推荐设置*
 
 
-Changing values on the settings tab affects all filesystems that are subsequently mounted.  Any filesystems that are already mounted will not be affected.  
+更改“设置”选项卡上的值会影响随后挂载的所有文件系统。任何已挂载的文件系统不会受到影响。
 
-The current settings are stored in the Windows registry and will be used the next time a filesystem is mounted, even from the command line.
+目前设置被存储在 Windows 注册表，并且将在下次挂载文件系统时使用，包括从命令行进行的操作。
 
-The settings tab has the following setings:
+设置选项卡有以下设置：
 
-**I/O buffer size (KB)**
+**I/O 缓冲区大小（KB）**
 
-This setting controls the maximum size of reads and writes that cppcryptfs does on the underlying fileystem.
+此设置控制 cppcryptfs 每次对底层文件系统的读取/写入的大小。
 
-cppcryptfs actually does I/O in multiples of the encrypted block size, which is 4,128 bytes.  So when you specify 4KB, the buffer size is really 4,128 bytes, and when you specify 1024KB, the buffer size is really 1,056,768 bytes.
+cppcryptfs 实际上以加密块大小的倍数（即 4,128 字节）执行 I/O 操作。因此，当您指定 4KB 时，缓冲区大小实际上是 4,128 字节，而当您指定 1024KB 时，缓冲区大小实际上是 1,056,768 字节。
 
-Increasing the I/O buffer size may result in improved performance.
+增加 I/O 缓冲区大小可能提升性能。
 
-**Cache time to live**
+**缓存有效时间**
 
-cppcryptfs caches information about the filesystem.  If an entry in a cache is older than the time to live, then that entry
-is re-validated before it is used.
+cppcryptfs 缓存有关其文件系统的信息。如果缓存中的项早于此有效时间，使用该项前将重新验证。
 
-Increasing the cache time to live or setting it to infinite will result in better performance.
+增加缓存有效时间或设置为无限将得到更好的性能。
 
-However, if you are constantly syncing your cppcryptfs filesystem with another copy of the filesystem that is on a another computer running
-under another instance of cppcryptfs or gocryptfs, then setting the time to live to too high of a value may result in errors
-if the filesystem is modified on the other computer.
+但是，如果您正持续将 cppcryptfs 文件系统与另一台运行有 cppcryptfs 或 gocryptfs 的计算机上的同一文件系统副本同步，并且另一台计算机上修改了该文件系统，则较高的有效时间可能导致出错。
 
-If you are not syncing the filesystem between two concurrently running instances of cppcryptfs or between an instance of cppcryptfs and an instance of gocryptfs, then there is no
-reason to not set the cache time to live to a high value or to infinite.
+如果您没有同时在不同 cppcryptfs（或 gocryptfs）实例之间同步文件系统，则没有理由不将缓存时间设置为较高值或无限。
 
-**Multi-threaded**
+**多线程**
 
-If this option is on, then more than one thread can process requests for each filesystem.  This may result in improved performance.  Dokany automatically chooses the number of threads it will use.
+如果开启此选项，则每个文件系统有多个线程来处理请求。这可能提升性能。Dokany 会自动选择将使用的线程数。
 
-If this option is disabled, then only one thread per-filesystem will be used to process requests.
+如果禁用此选项，则每个文件系统将仅使用一个线程来处理请求。
 
-**Case insensitive**
+**不区分大小写**
 
-This option has effect only in forward mode and only when encrypted file names are used.  Reverse-mode filesystems with encrypted file names are always case-sensitive, and filesystems with plain text file names are always case-insensitive.
+此选项仅在“正向”模式且使用了“加密文件名”时有效。采用“加密文件名”的“反向”模式的文件系统始终区分大小写，而“纯文本”文件名的文件系统始终不区分大小写。
 
-Normally, when file name encryption is used, cppcryptfs requires that files and directories be opened using the same case that was used when the files and directories were created.
+通常，在选用了“文件名加密”时，cppcryptfs 要求使用与创建文件/目录时完全相同的大小写来打开文件或目录。
 
-If the case insensitive option is checked, then cppcryptfs will ignore the case of file and directory names, in forward mode, even when file name encryption is used.  This is how the Windows API normally operates.  Also, performance will be a little slower. 
+如果选中“忽略大小写”选项，则 cppcryptfs 在“正向”模式下将忽略文件和目录名的大小写，即使使用了文件名加密。这就是 Windows API 的正常运行方式。另外，性能会慢少许。
 
-See the section on "Case Sensitivity" for more information.
+详情见“区分大小写”章节。
 
-**Enable Mount Manager (Recycle Bin)**
+**启用挂载管理器（回收站）**
 
-This setting is not currently enabled when either Defaults or Recommended settings are chosen.  You must enable it separately if you wish to use it.  It has not been tested thoroughly.
+选择“默认”或“推荐”设置时，目前不会启用此设置。因此需要时必须手动启用它。该选项尚未经过充分测试。
 
-This setting enables the Windows Mount Manager on the encrypted volume.  Enabling mount manager enables the recycle bin.  This setting works only if cppcryptfs is run as administrator.  If you try to mount a filesystem with this setting checked and cppcryptfs is not running as administrator, then cppcyrptfs will display a warning dialog (which can be disabled) and will not enable the mount manager.  
+此设置在加密卷上启用 Windows 挂载管理器（Windows Mount Manager）。启用挂载管理器将启用“回收站”功能。此设置仅在 cppcryptfs 以管理员身份运行时有效。如果您尝试在选中此设置的情况下挂载文件系统，但 cppcryptfs 未以管理员权限运行，cppcyrptfs 将显示一个警告对话框（对话框可以被禁用），并且不会启用挂载管理器。
 
-This setting has no effect on reverse filesystems or when filesystems are mounted read-only.
+此设置对“反向”文件系统或以只读方式挂载的文件系统没有影响。
 
-Note:  If you are syncing the encrypted files of your filesystem with Dropbox, then if you enable mount manger (recycle bin), then Dropbox will not be able to sync the files in the recycle bin because it does not have sufficient privileges.  
-You should either run Dropbox as Administrator, or you should determine which encrypted folder name is the name of the recycle bin and exclude it using the selective sync feature of Dropbox.  If you are using plaintext file names, then the recycle bin will be simply "$RECYCLE.BIN". The --list command line switch, if given the (unencrypted) path to the root directory of the filesystem as an argument, can be used to find the encrypted name of the recycle bin.
+注意：如果您正将被加密的文件系统文件与 Dropbox 同步，在启用挂载管理器（回收站）的情况下，Dropbox 会因缺乏权限而无法同步回收站中的文件。  
+您应该以管理员权限运行 Dropbox，或者确定哪个被加密的文件夹名称是回收站的名称，然后使用 Dropbox 的选择性同步功能将其排除。如果您使用的是纯文本文件名，则回收站的文件夹名称是“$RECYCLE.BIN”。通过向 --list 命令行选项提供一个相对于根目录的未加密路径作为参数，可用于查询回收站的加密后名称。
 
-e.g.
+例如
 
 
 ```
@@ -240,287 +228,267 @@ cppcryptfs --list=d:\
 
 ```
 
-**Enable saved passwords**
+**启用密码保存**
 
-This setting enables the saving of passwords.  Please see the section on Saved Passwords below for more information about saved passwords.
+启用此设置将允许保存密码。更多信息详见下文。
 
-When this setting is on, the "Save password" checkbox in the mount tab will be usable.  
+启用此设置后，挂载选项卡中的“保存密码”复选框将可用。
 
-If the "Enable saved passwords" setting is changed from checked to unchecked, then cppcryptfs asks if all saved passwords should be deleted.
+如果将“启用密码保存”设置从选中改为未选中，则 cppcryptfs 会询问是否应删除已保存的所有密码。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Never save history**
+**不保存历史记录**
 
-This setting prevents cppcryptfs from saving any values in the Windows registry except the values described on this page.  E.g. it will prevent the saving of paths in the history and from saving
-passwords even if saved passwords has been enabled.
+此设置可防止 cppcryptfs 在 Windows 注册表中保存设置（此页上描述的值除外）。例如，启用后将不再保存路径历史记录和密码，即使已启用“保存密码”。
 
-When this setting is checked, all values stored by cppcryptfs in the Windows registry
-will be deleted except for the settings described on this page *except* for saved passwords.  However, no new passwords will be saved while this setting is in effect.
+选中此设置后，cppcryptfs 存储在 Windows 注册表中的所有值将被删除，但此页面上描述的设置（保存的密码）*除外*。在此设置生效期间，不能再保存任何新的密码。
 
-To delete saved passwords, you must un-check the "save passwords" setting.
+要删除已保存的密码，您必须取消“保存密码”设置。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Delete desktop.ini files**
+**删除 desktop.ini 文件**
 
-This setting was created for https://github.com/bailey27/cppcryptfs/issues/62.  It was reported that Google Drive can create hidden desktop.ini files in every directory in the source folder of encrypted files.  These files were preventing users from deleting directories from the un-encrypted side.  If the filesystem is mounted with this setting on, then cppcryptfs will automatically delete unencrypted desktop.ini files when deleting a directory.  
+此设置是因 https://github.com/bailey27/cppcryptfs/issues/62 而创建。据报告，Google 云端硬盘可能在被加密文件的源文件夹中的每个目录中里创建隐藏的 desktop.ini 文件。这些文件阻止了用户在未加密方向删除目录。如果文件系统挂载时启用了此设置，则 cppcryptfs 将在删除目录时自动删除未加密的 desktop.ini 文件。
 
-This setting has effect only in forward mode and only if encrypted filenames are used.
+此设置仅在“正向”模式且使用了“加密文件名”时有效。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Open on mounting**
+**挂载时打开**
 
-If this setting is enabled, then when an encrypted volume is mounted, it will automatically be opened using the default Windows file management program which is is normally File Explorer.
+如果启用此设置，则在挂载加密卷时，将自动使用默认的 Windows 文件管理器（通常是“文件资源管理器”）打开该卷。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Encrypt Keys in Memory**
+**加密内存中的密钥**
 
-When this setting is enabled, cppcryptfs keeps the encryption keys (the primary key and any derived keys) encrypted using the Windows Data Protection API (DPAPI) when they are not needed.  The keys are encrypted using DPAPI, and they are unencrypted when needed and then the unencrypted copies are zeroed out when not needed.  See the section on "Saved Passwords" below for more information about DPAPI.
+启用此设置后，cppcryptfs 会在不需要加密密钥（主密钥和任何派生密钥）时使用 Windows 数据保护 API（DPAPI）对其进行加密。密钥使用 DPAPI 进行加密，在需要时被解密，并在不需要时将非加密的副本清零。有关 DPAPI 的更多信息，见下文的“密码保存”章节。
 
-This setting reduces the chance of malicious software being able to read the unencrypted keys from cppcyrptfs's process memory.  
+此设置可降低恶意软件从 cppcyrptfs 的进程内存中读取未加密密钥的可能性。
 
-Also, this setting prevents the unencrypted keys from ending up on disk in the hibernation file if the system goes into hibernation.
+此外，如果系统进入休眠状态，此设置可防止未加密的密钥最终出现在磁盘上的休眠文件中。
 
-This setting is brand new, and **any bugs in its implementation could cause data loss**.  It is recommened to use this setting only if you make frequent backups of your encrypted filesystems.
+此设置是全新的，**其实现中的任何 bug 都可能导致数据丢失**。仅当您频繁备份加密的文件系统时，才建议使用此设置。
 
-It is recommended to use "Cache Keys in Memory" (see below) with this setting. Otherwise there will be a signficant impact on performance if you do not enable "Cache Keys in Memory".
+建议将“在内存中缓存密钥”（见下文）配合此设置使用。否则将对性能产生重大影响。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Cache Keys in Memory**
+**在内存中缓存密钥**
 
-This setting has no effect unless "Encrypt Keys in Memory" is enabled.
+如果“加密内存中的密钥”未启用，此设置不起作用。
 
-When this setting is enabled and encrypt keys in memory is also enabled, then cppcryptfs will cache the unencrypted keys between uses for up to one second.
+如果启用此设置并同时启用“在内存中缓存加密密钥”，则 cppcryptfs 将在两次使用之间缓存未加密密钥长达一秒钟。
 
-This setting reduces the performance impact of "Encrypt Keys in Memory" to essentially zero.  Without this setting enabled, encrypt keys in memory significantly reduces performance.
+此设置将“加密内存中的密钥”的性能影响降低到基本为零。如果未启用此设置，则加密内存中的密钥会显著降低性能。
 
-When the system is about to enter standby or hibernation modes, cppcryptfs automatically disables the cache so when the system enters the low power mode, the unencrypted keys won't be in memory.  The cache is automatically re-enabled when the system wakes up.
+当系统即将进入待机或休眠模式时，cppcryptfs 会自动禁用缓存，因此当系统进入低功耗模式时，未加密的密钥不会出现在内存中。当系统唤醒时，缓存将自动重新启用。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
 
-**Enable fast mounting**
+**启用快速挂载**
 
-Previously, cppcryptfs would always wait for Dokany to call back to indicate whether or not a mount operation succeeded or failed.
+在以前，cppcryptfs 始终等待 Dokany 回调以标示挂载操作成功还是失败。
 
-Dokany was taking typically 5 seconds to call back.  However, the filesystem appeared to be mounted and available almost instantly.
+Dokany 通常需要 5 秒钟才能完成回调。但是，文件系统看上去是立即挂载并可用。
 
-When Enable fast mounting is turned on, cppcryptfs will both wait for Dokany's callback and periodically check (poll) to see
-if the filesystem is mounted.  If cppcryptfs discovers that the filesystem appears to be mounted, then cppcryptfs will stop waiting on Dokany and assume the mount operation succeeded.  If this setting is disabled, then cppcryptfs will only wait for the callback from Dokany.
+“启用快速挂载”开启时，cppcryptfs 将等待 Dokany 的回调并定期轮询检查文件系统是否已挂载。如果 cppcryptfs 发现文件系统似乎已经挂载，cppcryptfs 将停止等待 Dokany 并假定挂载操作成功。如果禁用此设置，则 cppcryptfs 只会坚持等待 Dokany 的回调。
 
-With this setting enabled, a successful mount operation is indicated as such on the developer's machine in about 31 milliseconds instead of 5 seconds as before.
+启用此设置后，在开发者的计算机上指示挂载操作成功只需约 31 毫秒，而不像以前那样需要 5 秒。
 
-Note:  this setting has no effect when the mount point is an empty NTFS directory and not a drive letter.  Dokany signals a successful mounting quickly if the mount point is a directory, and polling doesn't make sense in this case.
+注意：当挂载点是空 NTFS 目录而不是驱动器号时，此设置不起作用。如果挂载点是目录，Dokany 会快速发出挂载成功信号，这种情况下轮询没有意义。
 
-This setting is enabled by default.
+此设置默认启用。
 
-**Warn if in use when dismounting**
+**卸载时有使用则发出警告**
 
-If this setting is on, then if there are still any open files or directories 
-on a mounted filesystem when the user tries to dismount the filesystem,
-dismount all filesystems, or exit the program, then cppcryptfs will notify
-the user and ask if it should proceed with dismounting.
+如果开启此设置，当用户尝试卸载文件系统、卸载所有文件系统或者退出程序时，假如挂载的文件系统上仍有任何打开的文件或目录，则 cppcryptfs 将通知用户并询问它是否应该继续卸载。
 
-If this setting is on, then the --force flag is needed on the command line when dismounting filesystems that are in use. 
+如果开启此设置，那么通过命令行卸载正在使用的文件系统时需附加 --force 选项。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Deny Other Sessions**
+**拒绝其他会话**
 
-If this setting is enabled, then encrypted volumes will be accessible only in the session that started the instance of cppcryptfs that mounted them.  Any drive letters used for mounting 
-will still be visible to other sessions, but they will not be accessible to them.
+如果启用此设置，则加密卷只能在启动 cppcryptfs 实例来挂载加密卷的会话中访问。挂载所用的盘符仍对其他会话可见，但其他会话将无法访问。
 
-The check is done only in calls to the CreateFile API (which both creates new files and directories and opens existing ones).  Denying access to other sessions 
-only in CreateFile appears to be sufficient.
+这只是在调用 CreateFile API 时进行检查，创建新文件/目录或者打开现有文件/目录时会调用该 API。这似乎已经足够。
 
-The scope of testing of this feature makes the developer confident that this setting makes a mounted volume safe from
-access by an another ordinary logged-on user who is sharing the same computer and logged into a different session.  However, it is not certain that a determined and knowlegable attacker would not be able to find a way to circumvent this protection.  
+测试此功能的开发者相信，该设置应足以避免挂载的卷被共享同一台计算机并登录到其他会话的另一名普通用户访问。但是，还不确定有决心和专业知识的攻击者是否不能找到规避此保护的方法。
 
-Please see the descrition of Deny Services below for more information.
+有关细节详见下文的“拒绝服务”说明。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
-**Deny Services**
+**拒绝服务（Services）**
 
-If this setting is enabled, then encrypted volumes will not be accessible by Windows services running in session 0.  
+如果启用此设置，则“会话 0”中运行的 Windows 服务将不能访问加密卷。
 
-It is possible for Windows services running under the system account or processes created by users with the "Act as part of the operating system" user right to create access tokens and set whatever session id they want in them.  So this protection is not absolute but should prevent Windows services from accessing mounted filesystems in normal use situations.
+使用系统帐户运行，或者用户创建并拥有“作为操作系统的一部分（Act as part of the operating system）”用户权限的 Windows 服务，可以任意创建访问令牌和设置任意会话 ID。因此，此保护不能绝对避免，但应该能防止正常情况下的 Windows 服务访问已挂载的文件系统。
 
-This setting is not enabled in either the Default or Recommended settings.
+此设置在“默认”或“推荐”设置中不启用。
 
 
-**Defaults and Recommended**
+**默认值和推荐值**
 
-These buttons restore all settings to either the default settings or
-the recommended settings.
+这些按钮用来将所有设置还原为默认设置或推荐设置。
 
-Currently, the default and recommended settings are the same.
+目前，默认设置和推荐设置相同。
 
-**Reset Warnings**
+**重置警告**
 
-Pressing the Reset Warnings button will turn back on any warning dialogs which were previously disabled by selecting "don't show this message again".
+点击“重置警告”按钮将重新开启以前选择过“不再显示此消息”而禁用的所有警告对话框。
 
 
-More Settings
+更多设置
 ---------
-There is also a settings tab.  
+这是另一个设置选项卡。
 
-![Alt text](/screenshots/screenshot_more_settings.png?raw=true "Settings tab")  
-*Recommended settings shown*
+![Alt text](/screenshots/screenshot_more_settings.png?raw=true "设置选项卡")  
+*显示了推荐设置*
 
-The more settings tab has these additional settings:
+“更多设置”选项卡有以下额外设置：
 
-**Enable Flush After Write**
+**启用写入后刷新**
 
-A user reported that they were getting timeouts when copying lots of data to an external drive that was formatted using the exFAT filesystem.
+一位用户报告说，在将大量数据复制到使用 exFAT 文件系统格式化的外部驱动器时遇到了超时情况。
 
-The problem seems to be specific to exFAT.
+这个问题似乎只出现在 exFAT。
 
-The workaround is to enable flush after write.  When this setting is on, cppcryptfs will force Windows to write data to disk after every write operation cppcryptfs is asked to do.  
+解决方法是启用写入后刷新（flush）。启用此设置后，cppcryptfs 每次写入数据时将强制 Windows 立即将数据写入磁盘。
 
-This option reduces write performance noticeably. For copying large files, it's about 50% worse.  For lots of small files, it's much worse than that.
+此选项会显著降低写入性能。对于复制大文件，可能相差一半左右。而对于大量小文件，情况更糟。
 
-The setting is on if any of the condidtions are true, so to enable it always, one could check both the "NTFS" and "Not NTFS" boxes.
+此设置在任意条件符合时开启，因此如果要始终启用，可以同时选中“NTFS”和“非 NTFS”选项。
 
 
-Saved Passwords
+保存的密码
 ------
 
-If the "Enable saved passwords" setting is enabled in the settings tab,  then the "Save passwords" check box on the mount tab will be usable.
+如果在设置选项卡中启用了“启用密码保存”设置，则挂载选项卡上的“保存密码”复选框将可用。
 
-When cppcryptfs saves passwords, it uses the Windows Data Protection API (DPAPI) to encrypt the passwords.  The Windows DPAPI is described here.
+cppcryptfs 保存密码时使用 Windows 数据保护 API（DPAPI）来加密密码。Windows DPAPI 的介绍详见这里。
 
 https://msdn.microsoft.com/en-us/library/ms995355.aspx
 
-Data encrypted using Windows DPAPI is only as secure as the strength and security of the password used for logging into Windows.
+使用 Windows DPAPI 加密的数据的安全性，取决于登录该 Windows 所用的密码的强度和安全性。
 
-Saved passwords are associated with the path to the root of the encrypted filesystem.  
+保存的密码与加密文件系统的根目录路径相关联。
 
-Also, the "Save password" setting itself is assocated with the path.
+此外，“保存的密码”设置本身与路径相关联。
 
-To save a password, make sure the "Save password" box is checked when you mount the filesystem.
+要保存一个密码，需确保在挂载文件系统时选中“保存密码”选项。
 
-The password will be encrypted using DPAPI and saved in the Windows registry.
+密码将使用 DPAPI 加密并保存在 Windows 注册表中。
 
-To mount the filesystem without typing the password, make sure "Save password" is checked, and then either select the path from the path history, in which case the password for that path (if found) will be filled in (displaying as dots) in the password field. Or, if instead of selecting the path, you type it in the path field and press the mount button without typing a password, then if the saved password for that path is found, it will be used.
+若要避免挂载文件系统时输入密码，请选中“保存密码”选项，然后从路径历史记录中选择路径，此时会在密码框中填写该对应的密码（如果曾经保存），密码显示为点。如果您在路径框中输入路径，然后点击“挂载”而不输入密码，也将查找并使用已保存的该路径的密码。
 
-The -P command line option can be used to mount filesystems from the command line using the saved password for that path.
+命令行选项 -P 可用作从命令行使用已保存的密码挂载文件系统。
 
 
-Reverse Mode
+反向模式
 ------
-In reverse mode, the source (root) directory used for the filesystem consists of unencrypted files.  When this directory is mounted, then 
-the cppcryptfs drive letter provides an on-the-fly encrypted view of these files.
+在反向模式下，用于该文件系统的源文件（即根）目录由未加密的文件构成。挂载该目录后，cppcryptfs 的驱动器号里面将动态提供这些文件的已加密视角。
 
-Reverse mode also gives a view of the config file (as gocryptfs.conf), and if encrypted file names are used, a gocryptfs.diriv file in each directory.  And if long file names are used with encrypted file names, then the special long file name files are also presented.
+反向模式还提供了配置文件（名为 gocryptfs.conf），如果使用了加密文件名功能，则每个目录中也都有一个 gocryptfs.diriv 文件。如果长文件名与加密文件名一起使用，则还会呈现特殊的长文件名文件。
 
-Reverse mode fileystems are always mounted read-only.
+反向模式文件系统始终以只读方式挂载。
 
-When you create a reverse mode fileystem, the root directory of the filesystem doesn't have to be empty (unlike in the case of creating a normal forward
-mode filesystem).  cppcryptfs will create the config file 
-in the root directory of the filesystem.  This is a hidden file named .gocryptfs.reverse.conf (instead of an unhidden gocryptfs.conf which is used in 
-normal/forward mode).
+创建一个反向模式文件系统时，该文件系统的根目录不必为空（不同于创建一般的正向模式文件系统）。cppcryptfs 将在文件系统的根目录中创建一个名为 .gocryptfs.reverse.conf 的隐藏配置文件，不同于一般的正向模式下的非隐藏的 gocryptfs.conf 文件。
 
-When you go to mount a filesystem, cppcryptfs first looks for .gocryptfs.reverse.conf, and if it finds it, then it will mount the filesystem
-in reverse mode.  If it doesn't find .gocryptfs.reverse.conf, then it will try to open gocryptfs.conf, and if it succeeds, then the filesysem will
-mounted in forward (normal) mode.
+当您挂载文件系统时，cppcryptfs 首先会查找 .gocryptfs.reverse.conf，如果找到则将以反向模式挂载该文件系统。如果找不到 .gocryptfs.reverse.conf，那么将尝试打开 gocryptfs.conf，成功则会以正常的正向模式挂载该文件系统。
 
-If you specified a custom path for the config file, then you must check "reverse" to mount the filesystem in reverse mode.
+如果指定了自定义路径的配置文件，则必须选中“reverse”以反向模式挂载文件系统。
 
-If you mount a reverse filesystem and then copy the whole directory tree to some other location, you can then mount that copy (which contains encrypted files and the normal mode config file and other support files) as a forward (normal) filesystem.
+如果您挂载一个反向文件系统，然后将整个目录树复制到其他的位置，之后则可以将该副本（包含加密的文件、正常模式配置文件和其他支持文件）作为正向（正常）文件系统挂载。
 
-Reverse mode is useful for when you want to back up a directory tree of unencrypted files, but you want the backup to be encrypted.
+当您想要加密备份未加密文件组成的整个目录树时，反向模式非常有用。
 
-Reverse mode uses a deterministic AES256-SIV mode of encryption (really AES512-SIV but with the 512-bit SIV key derived from the 256-bit master key) for file data, and it also does the file name encryption deterministically.
+反向模式对文件数据使用确定性 AES256-SIV 加密模式（实际上是 AES512-SIV，但 512 位 SIV 密钥派生自 256 位主密钥），并且它还执行确定性的文件名加密。
 
-Note: when you mount a filesystem using AES256-SIV in forward mode, any new encryption is done non-deterministcally (as is the case with gocryptfs).
+注意：在正向模式下挂载使用 AES256-SIV 的文件系统时，进行的任何新加密都是非确定性的（与 gocryptfs 保持一致）。
 
-Because the encryption in reverse mode is deterministic, you can use a utility like rsync to back up the encrypted files, and it will copy only the files that have changed.  Also, if your backup utility supports delta-syncing (as rsync does) when working with the unencrypted data, then it will also do delta-syncing with the encrypted data in reverse mode as long as the data is changed in-place. However, if data is inserted into a file, then a cascading change will appear in the encrypted file data from the point at which the data was inserted (actually, starting with that whole encryption block) and the data from there on will need to be copied again.
+由于反向模式下的加密是确定性的，因此可以使用 rsync 等实用工具备份加密的文件，工具将仅复制有变更的文件。如果您的备份工具在处理未加密数据时支持增量同步（如 rsync 所做的那样），那么在反向模式下同步加密的数据时也只需要已变更的部分。但是，如果有数据被插入到文件中，则已加密文件的数据中将出现从插入数据点开始的级联更改（准确说是从那个加密数据块开始），从那里开始的数据需要被再次复制。
 
-It is possible to mount a mounted reverse filesystem in forward mode.  The forward filesystem will be read-only as well.  This is useful mainly for testing.
+可以在正向模式下挂载已挂载的反向文件系统。此时正向文件系统也将是只读的。这主要用于测试。
 
-Command Line Options
+命令行选项
 ----
-cppcryptfs accepts some command line options for mounting and unmounting filesystems.  Currently, filesystems can be created only by using the gui.
+cppcryptfs 能接受一些挂载和卸载文件系统的命令行选项。但截至目前，文件系统的创建只能通过图形界面（GUI）完成。
 
-There can be only one main instance of cppcryptfs running.  If no other instance of cppcryptfs is running, then cppcryptfs processes any command line arguments and then continues
-to run.  If there is already another instance of cppcryptfs running, then cppcryptfs will send its command line arguments to the main, already-running, instance.  If run from a
-console window, it will print any output from processing the command line to the console. If not run from a console, it will display the output in a message box.
+同时只能有一个正在运行的 cppcryptfs 主实例。如果没有其他的 cppcryptfs 实例正在运行，则 cppcryptfs 将处理任何命令行参数，然后持续运行。如果已有另一个 cppcryptfs 实例在运行，则 cppcryptfs 会将其命令行参数发送到已在运行的主实例。如果运行来自控制台窗口，程序会将处理命令行后的输出内容印到控制台。如果不是从控制台运行，程序将在消息框中显示输出。
 
-There is also a companion program, cppcryptfsctl, that can be used to send commands to an already-running cppcryptfs.  cppcryptfsctl is a console program.  The
-advantage of using it is that it sets ERRORLEVEL so this can be tested in batch scripts.  Also, it is possible to redirect the output of cppcryptfsctl to a file
-or pipe it to another program like grep of findstr.  cppcryptfs does not set ERRORLEVEL, and its output cannot be redirected.
+项目还有一个配套程序 cppcryptfsctl，可用于将命令发送到已在运行的 cppcryptfs。cppcryptfsctl 是一个控制台程序。
+使用它的优点是它设置了 ERRORLEVEL，因此可以在批处理脚本中对其进行测试。此外，也可以将 cppcryptfsctl 的输出重定向到文件，或者将其管道传输到另一个程序，例如 findstr 的 grep。cppcryptfs 未设置 ERRORLEVEL，并且无法重定向其输出。
 
-cppcryptfsctl sets ERRORLEVEL to 0 on success, to 1 if an error occurs, and to 2 if it cannot connect which implies  that cppcryptfs isn't running.
+cppcryptfsctl 执行成功时将 ERRORLEVEL 设为 0；发生错误则设为 1；如果无法连接（没有正在运行的 cppcryptfs）则设为 2。
 
-Passwords passed through the command line are not really secure.  cppcryptfs locks and zeros its internal copies of the command line, but, for example, it does not zero the command line stored in the Windows PEB (Process Environment Block). Also, if cppcyrptfs is already running, then an invocation of cppcryptfs (or cppcryptfsctl) from the command line will cause it to pass the command line to the already running instance. It tries to do this in a fairly secure way.  It communicates with the running instance using a local Windows named pipe. If the program running on either side of the pipe is signed, then it verifies that the program on the other end of the pipe is also running from a signed executable and that the common name on both signatures are the same.  However, it is unknown how many times the command line might be copied by Windows out of cppcryptfs' control.  So there is some chance that a password passed via the command line might end up in the paging file if a paging file is being used.
+通过命令行传递密码并不安全。cppcryptfs 会锁定并清零命令行的内部副本，但并不能清零存储在 Windows PEB（进程环境块）中的命令行。此外，如果 cppcyrptfs 已在运行，从命令行调用 cppcryptfs（或 cppcryptfsctl）将导致它将命令行传递给已运行的实例。它尝试以足够安全的方式执行此操作。它使用本地的 Windows 命名管道与正在运行的实例通信。如果管道中任意一端运行的程序已被签名，则程序还会验证管道另一端的程序是否是已签名的可执行文件运行，并且两个签名上的通用名是否相同。但是，目前尚不清楚 Windows 可能会将 cppcryptfs 控制的命令行复制多少次。因此，如果使用了分页文件（页面文件），则通过命令行传递的密码可能会最终出现在分页文件中。
 
-The name of the named pipe is decorated with the username and domain name of the user who started cppcryptfs.  Therefore cppcryptfs/cppcryptfsctl can be used to 
-communicate only with an instance of cppcryptfs started by the same user.
+命名管道的名称使用启动 cppcryptfs 的用户的用户名和域来点缀。因此，cppcryptfs/cppcryptfsctl 只能与由同一用户启动的 cppcryptfs 实例通信。
 
 ```
 
-Usage: cppcryptfs/cppcryptfsctl [OPTIONS]
+用法：cppcryptfs/cppcryptfsctl [选项]
 
-Mounting:
-  -m, --mount=PATH            mount filesystem located at PATH
-  -d, --drive=D               mount to drive letter D or empty dir DIR
-  -p, --password=PASS         use password PASS
-  -P, --saved-password        use saved password
-  -r, --readonly              mount read-only
-  -c, --config=PATH           path to config file for init/mount
-  -s, --reverse               init/mount reverse fs (implies siv for init)
-  --deny-other-sessions [1|0] enable/disable deny other sessions from accessing
-  --deny-services [1|0]       enable/disable deny services from accessing
+挂载：
+  -m， --mount=PATH 挂载位于指定路径的文件系统
+  -d， --drive=D 挂载到驱动器号 D 或指定的空目录
+  -p， --password=PASS 使用密码 PASS
+  -P， --saved-password 使用保存的密码
+  -r， --readonly              挂载为只读
+  -c， --config=PATH 初始化/挂载使用指定路径的配置文件
+  -s， --reverse               初始化/挂载反向模式的文件系统（初始化隐含 siv）
+  --deny-other-sessions [1|0]       启用/禁用拒绝其他会话的访问
+  --deny-services [1|0] 启用/禁用拒绝服务（services）的访问
 
-Unmounting:
-  -u, --unmount=D             unmount drive letter D or dir DIR
-  -u, --unmount=all           unmount all drives
-  -f, --force                 force unmounting if in use
+卸载：
+  -u， --unmount=D 卸载驱动器号 D 或指定的目录
+  -u， --unmount=all 卸载所有的驱动器
+  -f， --force 强制卸载使用中的挂载
 
-Misc:
-  -t, --tray                  hide in system tray
-  -x, --exit                  exit if no drives mounted
-  -l, --list                  list avail drive letters and mounted fs
-  -ld:\p, --list=d:\p         list plaintext and encrypted filenames
-  -C, --csv                   file list is comma-delimited
-  -D, --dir                   file list dirs first and w/ trailing \
-  -Mpath, --transform=path    transform full path (encrypt or decrypt)
-  -i, --info=D                show information about mounted filesystem
-  -v, --version               print ver (use --init -v for cppcryptfsctl ver)
-  -h, --help                  display this help message
+其他：
+  -t， --tray                 隐藏在系统托盘中
+  -x， --exit 如果未挂载驱动器则退出
+  -l， --list  列出可用的驱动器号（盘符）和已挂载的文件系统
+  -ld:\p， --list=d:\p 列出明文和加密的文件名
+  -C， --csv 文件列表以逗号分隔呈现
+  -D， --dir 文件列表中目录先行且尾缀 \
+  -Mpath, --transform=path   转换完整路径（加密或解密）
+  -i， --info=D 显示已挂载文件系统的相关信息
+  -v， --version 列出版本号（cppcryptfsctl 的版本需使用 --init -v）
+  -h， --help 显示此帮助消息
 
-Initializing (cppcryptfsctl only):
-  -I, --init=PATH             Initialize encrypted filesystem located at PATH
-  -V, --volumename=NAME       specify volume name for filesystem
-  -T, --plaintext             use plaintext filenames (default is AES256-EME)
-  -S, --siv                   use AES256-SIV for data encr (default is GCM)
-  -L, --longnames [1|0]       enable/disable LFNs. defaults to enabled (1)
-  -b, --streams   [1|0]       enable/disable streams. defaults to enabled (1)
-  --longnamemax N             limit filenames to at most N characters
+初始化（仅限 cppcryptfsctl）：
+  -I， --init=PATH 在 PATH 初始化加密文件系统
+  -V， --volumename=NAME 指定文件系统的卷名（卷标）
+  -T， --plaintext             使用纯文本文件名（默认则是 AES256-EME）
+  -S， --siv 数据转换使用 AES256-SIV（默认则是 GCM）
+  -L、--longnames [1|0] 启用/禁用 LFN（长文件名）。默认为启用（1）
+  -b， --streams [1|0] 启用/禁用（命名）流。默认为启用 （1）
+  --longnamemax N 将文件名限制为最多 N 个字符
 
-Recovery/Maintenance (cppcryptfsctl only):
-  --changepassword=PATH       Change password used to protect master key
-  --printmasterkey=PATH       Print master key in human-readable format
-  --recover=PATH              Prompt for master key and new password to recover
+找回/维护（仅限 cppcryptfsctl）：
+  --changepassword=PATH 更改保护主密钥的密码
+  --printmasterkey=PATH 以人类可读的格式列出主密钥
+  --recover=PATH 要求用户输入找回用的主密钥和新的密码
 
 ```
 
-Only cppcryptfsctl can create a filesystem from the command line(--init).  To create a filesystem with cppcryptfs you have to use the GUI.  
+只有 cppcryptfsctl 可以从命令行（--init）创建一个文件系统。如果要使用 cppcryptfs 创建文件系统，必须使用图形界面（GUI）。
 
-When creating/initializing a filesystem, cppcryptfsctl will prompt for the password and repeat password without echo if run interactively. If its standard input is redirected, then it will read the password from standard input without prompting.
+创建/初始化文件系统时，如果以交互方式运行，cppcryptfsctl 将提示输入密码并重复密码而不进行回显。如果其标准输入被重定向，它将从标准输入读取密码而不提示用户输入。
 
-To get the version of cppcryptfsctl, you must specify initialize and -v.  e.g. cppcryptfsctl -I -v, otherwise it will attempt to get and print the version of a running instance of cppcryptfs.
+如要获取 cppcryptfsctl 的版本，必须指定 initialize 和 -v。例如 cppcryptfsctl -I -v，否则它将尝试获取并列出正在运行的 cppcryptfs 实例的版本。
 
-Some options are common to both initializing and mounting (--config and --reverse).
+部分选项在初始化和挂载（--config 和 --reverse）环节中是通用的。
 
-Note: when using the short version of the option, you should not use the equal sign between the option and its argument.  When using the long version of the option, the equal sign is optional. e.g. these will work
+注意：使用选项的简短版本时，不应在选项与其参数之间使用等号。使用选项的长版本时，等号是可选的。例如，下列有效
 
-Also, if you intend to mount a volume to a drive letter, then you should not include a \\ character in the argument to the drive option.  e.g. if you want to mount to drive "r:" use "-dr:" and not "-dr:\\".
+此外，如果打算将卷挂载到一个驱动器号，不应该在驱动器选项的参数中包含 \\ 字符。例如，如果要挂载到驱动器“r:”，使用“-dr:”而不是“-dr:\\”。
 
 
 ```
@@ -530,12 +498,11 @@ cppcryptfs --mount c:\tmp\test --drive k --password XYZ
 
 ```
 
-The --list option has an optional argument.  If there is no argument given, then
-it lists the drive letters and shows the path to the root of the encrypted filesystem for mounted filesystems.  
+--list 选项有一个可选参数。如果没有提供参数，则它列出驱动器号，并显示已挂载的文件系统的加密版文件系统根目录所在路径。
 
-The list command also takes a full path as an optional argument.  The path should be the unencrypted name of a file or directory including the drive letter.  If the argument is a file, then cppcryptfs will print the unencrypted file path on the left and the encrypted path on the right.   If the argument is a directory, then cppcryptfs will print the unencrypted names of the files on the left and the encrypted names on the right.
+list 命令还将完整路径作为可选参数。路径应为文件或目录（包括驱动器号）的未加密名称。如果参数是一个文件，则 cppcryptfs 将在左侧列出未加密的文件路径，在右侧列出加密后的路径。如果参数是一个目录，则 cppcryptfs 将在左侧列出若干文件的未加密名称，在右侧列出加密后名称。
 
-Because of the way optional arguments are handled, if you are using the short form of the list switch (-l), then you must put the path right after the -l with no space.  And if you are using the long form (--list), then you must use the "=" sign.  e.g.
+由于可选参数的处理方式，如果使用 list 选项的缩写形式（-l），则必须将路径放在 -l 之后且不带空格间隔。如果使用长格式参数（--list），则必须使用"="符号。例如
 
 ```
 cppcryptfs -lk:\foo
@@ -544,212 +511,199 @@ cppcryptfs --list=k:\foo
 
 ```
 
-There can be only one instance of cppcryptfs running at any time.
+同时只能运行一个 cppcryptfs 实例。
 
-When cppcryptfs is invoked, it checks to see if there is another instance running.  If there is, then if there are no command line options, the second instance of cppcryptfs will simply exit.  If there isn't another instance running, then it will process the command line options (if any) and  will continue running unless --exit is specified and there are no mounted drives.
+当调用 cppcryptfs 时，它会检查是否有另一个实例正在运行。如果有，那么如果没有命令行选项，则 cppcryptfs 的第二个实例将直接退出。如果没有其他运行中的实例，则它将处理命令行选项（如果有）并继续运行，除非指定了 --exit 参数并且没有已挂载的驱动器。
 
-Therefore, if you plan to use cppcryptfs or cppcryptfsctl in batch files, you need to start an instance in the background first.  Then you should do the other operations in the foreground so they will block until completed.
+因此，如果您打算在批处理文件中使用 cppcryptfs 或 cppcryptfsctl，需要先在后台中启动一份实例。然后，您还应该在前台执行其他操作，以等待启动完成。
 
-If you start "cppcryptfs --tray" in the background, then if there is already a running instance, then that instance will be told to hide itself in the system tray.  If there is not already an instance running, then you will have started cppcryptfs hidden in the system tray, running in the background. 
+如果在后台启动了“cppcryptfs --tray”，假如已有一个正在运行的实例，则该实例将被告知将其自身隐藏到系统托盘中。如果没有实例在运行，那么您将启动一个隐藏在系统托盘中并保持在后台运行的 cppcryptfs。
 
-Here is an example Windows cmd batch file using cppcryptfs.
+下面是一个使用 cppcryptfs 的 Windows cmd 批处理文件示例。
 
 
 ```
 @rem ====================================================
-@rem run cppcryptfs in background and give it time to start up
+@rem 在后台运行 cppcryptfs 并等待片刻
 @rem ====================================================
 
 start cppcryptfs.exe --tray
 timeout /t 1 >nul
 
 @rem ====================================================
-@rem Mount drive U:
+@rem 挂载驱动器 U:
 @rem ====================================================
 
 cppcryptfs.exe --mount=d:\TestCppCryptFS --drive=u --password=PASSWORD --tray  --exit
 
 @rem ====================================================
-@rem Mount drive V:
+@rem 挂载驱动器 V:
 @rem ====================================================
 
 cppcryptfs.exe --mount=d:\TestCppCryptFS2 --drive=v --password=PASSWORD --tray  --exit
 
 @rem ====================================================
-@rem Run any command with the mounted drives
+@rem 在挂载的驱动器上运行命令
 @rem ====================================================
 
 copy  C:\test.txt U:\test.txt
 copy  C:\test.txt V:\test.txt
 ```
 
-Here is an example cygwin bash scrypt.  Note that in bash, you need to
-use double-backslashes in the mount paths.
+下面是一个 cygwin bash scrypt 示例。注意，在 bash 中需要为安装路径使用双反斜杠。
 
 
 ```
 
-#!/bin/bash
-# start cppcryptfs in the background and hidden in the system tray
+#！/bin/bash
+# 在后台启动 cppcryptfs 并隐藏在系统托盘中
 /cygdrive/c/bin/cppcryptfs -t &
-# give it time to initialize
+# 给它时间初始化
 sleep 1
-# mount a filesystem and wait for the mount operation to complete
-/cygdrive/c/bin/cppcryptfs --mount c:\\tmp\\test -d k -p XYZ
-# do backup operation
+# 挂载文件系统并等待挂载操作完成
+/cygdrive/c/bin/cppcryptfs --mount c：\\tmp\\test -d k -p XYZ
+# 做备份操作
 rsync .....
-# unmount all drives and exit
-/cygdrive/c/bin/cppcryptfs -u all -x
+# 卸载所有驱动器并退出
+/cygdrive/c/bin/cppcryptfs -you all -x
 
 ```
 
-Change Password
+更改密码
 ------
-cppcryptfsctl has the ability to change the password that protects the master key in the config file (normally gocryptfs.conf or .gocryptfs.reverse.conf).
+cppcryptfsctl 可以更改保护配置文件中主密钥所用的密码。配置文件通常是 gocryptfs.conf 或 .gocryptfs.reverse.conf。
 
-This feature is mainly for people who just want to use a different password.  It is not a good solution for a compromised password.
+此功能主要适用于想换一个密码的人。这不是应对密码泄露的良好解决方案。
 
-All changing the password does is change the password used to mount the filesystem.  It does not change the encryption key used to encrypt the data.  This is because the key that is used to encrypt the data is encrypted using a key derived from the password and stored in the config file.  So all the password is used for is to unencrypt the actual encryption key.
+更改密码只是更改了挂载文件系统所需的密码。它不会更改加密数据所用的加密密钥。用来加密数据的密钥存储在配置文件中，通过从密码派生一个密钥来保护。因而，密码只是用来解密实际要用的加密密钥。
 
-Therefore, if somebody has your password and a copy of your old config file, then they would still be able to decrypt the data and any data you add or change
-after changing the password. 
+因此，如果有人持有您原有的密码和配置文件副本，那么即便您更改了密码，他们仍然可以解密您原有和新增的所有数据。
 
-If you think your password has been compromised, and if you think somebody might already have your config file, then the best thing to do is to create a new
-filesystem with a new password, mount it, mount the old filesystem, and copy your data from the unencrypted view of the old filesytem to the unencrypted 
-view of the new filesystem.
+如果您认为您的密码已被泄露，并且认为有人可能已经拥有您的配置文件，那么最好的办法是新建一个使用新密码的文件系统，挂载它，并挂载旧文件系统，将数据从旧的未加密视图复制到新的未加密视图。
 
-Recovery of Lost Password
+密码丢失后的恢复
 -----------
-Recovering from a lost password is possible only if you have printed and saved the
-unencrypted master key.
+如果您之前打印或保存了未加密的主密钥，才可能进行密码丢失后的数据恢复。
 
-If you run:
+如果您运行：
 
-cppcryptfsctl --printmasterkey PATH (path to encrypted filesystem dir or config file)
+cppcryptfsctl --printmasterkey PATH（加密的文件系统目录或配置文件的路径）
 
-It will print the unencrypted master key in human-readable form.  For example, you could print it and save it in a locked drawer.
+它将以人类可读的形式印出未加密的主密钥。例如，您可以打印它并将其保存到上锁的抽屉中。
 
-If you forget your password, you can run
+如果您忘记了密码，可以运行
 
-cppcryptfsctl --recover PATH 
+cppcryptfsctl --recover 路径
 
-It will prompt for you to enter the master key, and then it will prompt for you to enter the new password and confirm the new password.
+它将提示您输入主密钥，然后提示您输入新的密码和确认新密码。
 
-This operation overrwrites the master key in the target config file.  It makes a backup of the config file before doing this. The backup is named by appending .bak to the name of the config file. If the .bak file already exists, it asks for you to delete the existing .bak file or move it out of the way.
+此操作将覆盖目标配置文件中的主密钥。执行此操作之前，它会备份配置文件（用原名称加.bak后缀）。如果 .bak 文件已存在，将要求您删除或移走现有的 .bak 文件。
 
 
-Recovery of Lost or Corrupted Config File
+配置文件丢失或损坏后的恢复
 -----------
-Recovery of a lost or corrupted config file is possible only if you have the unencrypted master key.
+此操作同样要求您持有未加密的主密钥。
 
-cppcryptfsctl --printmasterkey PATH (path to encrypted filesystem dir or config file)
+cppcryptfsctl --printmasterkey PATH（指定加密文件系统所在目录或配置文件的路径）
 
-This will print the unencrypted master key in human-readable form.  If you did this and saved the key, then you can use it to recover
-from a lost or corrupted config file.
+这将以人类可读的形式列出未加密的主密钥。如果执行此操作并妥善保存该密钥，在配置文件丢失或损坏时则可以用它来恢复原状。
 
-The procedure is to do this (assuming you have printed the master key and saved it before recovery was necessary):
+操作流程如下（假设您之前已列出并妥善备份对应的主密钥）：
 
-1. You will need to create a new filesystem, using the same parameters other than paths (e.g. data encryption method, filename encryption method, long
-filenames, etc.) that you used when you created the filesystem that you are trying to recover.  
+1. 您将需要创建一个新的文件系统，使用与要恢复的文件系统完全相同的参数（例如数据加密方法、文件名加密方法、长文件名等选项。路径除外）。
 
-It doesn't matter what password you use.
+您使用的密码在这里不重要。
 
-2. use cppcryptfsctl --recover PATH to put the master key from the old filesystem in that config file.
+2. 使用 cppcryptfsctl --recover 路径 将旧文件系统中的主密钥放到该配置文件中。
 
-This will replace the master key in that config file with the one you entered.  It will be encrypted with the new password you choose.
+这会将该配置文件中的主密钥替换为您输入的主密钥。它将使用您选择的新密码进行加密。
 
-3. Try mounting the old filesystem specifying the path to the new config file and see if works (make sure you can read data from it).
+3. 尝试指定新的配置文件的路径来挂载旧的文件系统，看是否生效（测试确保可以从中读取数据）。
 
-4. If it works, then you can place the config file you recovered to in the root of your encrypted filesystem if you wish.
+4. 如果一切正常，那么您可以考虑将恢复的配置文件放到加密文件系统的根目录中。
 
-The only catch here is that if you have a filesystem created with gocryptfs or cppcryptfs versions prior to 1.3 
-(released in April/May 2017), then you will have problems with HKDF and Raw64.  These are now defaults, and 
-there is no way to create a config file without them.
+此处唯一的问题是，如果操作的这个文件系统是使用 gocryptfs 或 cppcryptfs 版本 1.3（2017年4月~5月发布）或更早版本的工具来创建，那么会有 HKDF 和 Raw64 的问题。这些现在是默认值，并且是创建配置文件所必需的。
 
-So if you have an old filesystem you are recovering, and it's not working,  then try editing
-the config file you created to recover to and remove the lines that have 
+因此，如果您正在恢复是旧的文件系统，并且它不起作用，请尝试编辑您创建的用于恢复的配置文件，并移除下列行
 
 ```
         "HKDF",
         "Raw64",
 ```
 
-And see if that works.        
+然后看看这是否有效。
 
 
-File name and path length limits
+文件名和路径长度限制
 ------
 
-If "Long file names" (the default) is specfied when creating the fileystem, or if plain text file names are used, and if the underlying filesystem is reasonably modern (e.g. NTFS/exFAT/FAT32), then a file or directory name can be up to 255 characters long, and a full path can be approximately 32,000 characters long.
+如果创建文件系统时指定了“长文件名”（默认值），或者使用了纯文本文件名，并且基础文件系统足够现代（例如 NTFS/exFAT/FAT32），则一个文件或目录名称最长为 255 个字符，而完整路径最长约为 32,000 个字符。
 
-If "Long file names" is not specified and plain text file names aren't used, then the maximum length of a file or directory name is 160 characters.  But the full path limit is still approximately 32,000 characters (assuming NTFS/exFAT/FAT32).
+如果未指定“长文件名”并且未使用纯文本文件名，则文件或目录名称最长为为 160 个字符。但完整路径的限制仍约为 32,000 个字符（假设 NTFS/exFAT/FAT32）。
 
-When a file name is encrypted, it is converted from UNICODE-16 to UTF-8 which, depending the language, might cause the number of characters to increase.  Then it is encrypted, which causes it to be padded by up to 16 bytes. Then it is base64 encoded, which typically results in a 33% increase in length.  The encrypted file names can therefore be signifcantly longer than the unencrypted names.
+文件名被加密时会从 UNICODE-16 转换为 UTF-8，根据语言的不同，有可能导致字符数增加。加密过程中还会向其填充最多 16 个字节。然后会进行 base64 编码，这通常导致长度增加 33%。因此，加密后的文件名可能变长不少。
 
-Also, the path to the directory in which the encrypted fileystem resides must be pre-pended to the path of the encrypted file names.
+另外，加密的文件系统所在目录的路径（在调用时）必将作为加密后文件名的路径前缀。
 
-Older filesystems, such as FAT16, will limit the total path length to 259 characters.
+陈旧的文件系统（如 FAT16）会将总路径长度限制为 259 个字符。
 
-It is therefore strongly recommended to use a modern file system like NTFS, exFAT, or FAT32 whenever possible.
+因此，强烈建议尽可能使用 NTFS、exFAT 或 FAT32 等现代文件系统。
 
-A lot of Windows progams, including File Explorer that comes with Windows, have problems with paths longer than the old 259 character limit, regardless of which underlying filesystem is used.  If you use encrypted file names, then you might need to use a third-party file manager that handles long file paths if you want to move the root of your encrypted filesystem.  It's a good idea to copy it and then delete the old one instead of moving it in case your file manager has problems.
+许多 Windows 程序（包括 Windows 自带的文件资源管理器）在遇到路径长度超过传统的 259 个字符限制时都会出现问题，无论使用哪种基础文件系统。如果使用加密文件名，则当移动加密的文件系统的根目录时，可能需要使用能处理长文件路径的第三方文件管理器。最好是先复制它，然后再删除旧的文件，而不是直接移动它，以防文件管理器在移动途中报错。
 
 
-Case Sensitivity
+区分大小写
 -----
-The Windows API is not case-sensitive with respect to file names, but  Windows filesystems (NTFS and FAT32) preserve the case
-of file names.
+Windows API 不区分文件名的大小写，但 Windows 文件系统（NTFS 和 FAT32）保留文件名的大小写。
 
-In Windows, if you create a file as "Foo.txt" and then try to open it as "foo.txt", it will work.
+在 Windows 中，如果将文件创建为 "Foo.txt"，然后尝试用 "foo.txt" 打开它，不会出现问题。
 
-Most, but not all, software opens files using the same case that was used when the files were created.
+大多数（但并非全部）软件使用与创建文件时相同的大小写打开文件。
 
-cppcryptfs was originally always case-sensitive if encrypted file names were used. This is how gocryptfs operates.
+如果选用“加密的文件名”，cppcryptfs 原本始终区分大小写，因为 gocryptfs 的设计如此。
 
-So, if encrypted file names were used, then if a file was created as "Foo.txt", then if an attempt were made to open "foo.txt", the file would not be found.
+因而，如果使用了加密文件名功能，将文件创建为"Foo.txt"后如果尝试打开"foo.txt"，会出现找不到该文件错误。
 
-cppcryptfs now has a "case-insensitive" setting that causes it to have case-insensitive behavior even when encrypted file names are used, but only in forward (normal) mode.
+cppcryptfs 现在已有“忽略大小写”设置，搭配它时即使使用了“加密文件名”，也会忽略文件名大小写的差异，不过此选项仅在正向（正常）模式下有效。
 
-In reverse mode, file names are always case-sensitive if encrypted file names are used, regardless of the case-insensitive setting.  This is a necessary precaution because if the case of an encrypted file name is changed (for example, when backing up the filesystem), then the file name will not decrypt properly if the copy of the filesysem is subsequently mounted in forward mode.
+在反向模式下，如果选用加密文件名，则文件名始终区分大小写，而不考虑“忽略大小写”设置。这是一项必要的预防措施，因为如果加密后文件的文件名大小写被备份软件等系统更改，随后以正向模式挂载该文件系统的副本时文件名将无法正确解密。
 
-If plain text file names are used, then file names are always case-insensitive, in both forward and reverse mode, regardless of the case-insensitive setting.
+如果使用纯文本文件名，则无论大小写设置如何，在正向和反向模式下，文件名始终不区分大小写。
 
 
-Performance
+性能
 ------
-Below are some benchmark results.  The tests were conducted using the cygwin utilities under Windows 10 64-bit running on an Intel i5-4200U cpu with a Crucial M500 240GB ssd.  With cppcryptfs, AES256-GCM was used for encrypting file data and encrypted file names and long file names were used.
+下方是一些基准测试结果。测试是在 Windows 10 64位系统下使用 cygwin 实用程序进行的，该实用程序运行在一个装有 Crucial M500 240GB SSD、Intel i5-4200U CPU 的系统上。使用 cppcryptfs，AES256-GCM 来加密文件数据，使用加密的文件名和长文件名。
 
-Windows Defender realtime scanning was disabled during the tests because it severely slows down cygwin tar.  It took 2m43.600s to extract linux-3.0.tar.gz on native NTFS with realtime scanning enabled.
+Windows Defender 实时扫描在测试期间被禁用，因为它严重拖慢了 cygwin tar 的速度。在启用实时扫描的原生 NTFS 上提取 linux-3.0.tar.gz 需要2分43.6秒。
 
-cppcryptfs performs about the same as the mirror sample program from Dokany which doesn't do encryption.  The SSD is rated for 250 MB/sec streaming write performance.
+cppcryptfs 的性能与 Dokany 的镜像示例程序（不加密）大致相同。该 SSD 的流写入性能额定值为每秒 250 MB。
 
 ```
-                                cppcryptfs      native NTFS     Dokany mirror
+                                cppcryptfs      原生 NTFS     Dokany 镜像
 
-Streaming Write                 168 MB/s        224 MB/s        181 MB/s
-Extract linux-3.0.tar.gz        1m36.412s       0m21.291s       1m34.125s	
+数据流写入                 168 MB/s        224 MB/s        181 MB/s
+解压 linux-3.0.tar.gz        1m36.412s       0m21.291s       1m34.125s	
 ls -lR linux-3.0                1m1.979s        0m2.983s        1m11.618s
-Delete linux-3.0                1m28.749s       0m10.144s       1m24.677s
+删除 linux-3.0                1m28.749s       0m10.144s       1m24.677s
 
 ```
 
-The above benchmarks were run a long time ago.  The creator of gocryptfs has published similar benchmarks more recently comparing cppcryptfs to other cryptographic filesystems on Windows.  
+上述基准测试是在很久以前进行的。gocryptfs 的创建者最近发布了类似的基准测试，比较了 cppcryptfs 与 Windows 上的其他加密文件系统。
 
 https://nuetzlich.net/gocryptfs/comparison/#performance-on-windows
 
-Some of the results are faster but most are slower than the above benchmarks.
-This could be explained by Windows Defender realtime protection being
-active during the tests.  All cryptographic filesystems tested
-seem to have been affected in the same way.
+有些结果更快，但大多数结果比上述基准测试结果慢。
+这可能解释为 Windows Defender 实时保护在测试期间未被禁用的的影响。
+测试期间的所有加密文件系统似乎都受到了同样的影响。
 
-Compatibility with gocryptfs
+与 gocryptfs 的兼容性
 ------
 
-cppcryptfs can mount all filesystems created by gocryptfs v0.7 and higher. Likewise, filesystems created by cppcryptfs with "long file names = off" can be mounted by gocryptfs v0.7 and higher. Filesystems with "long file names = on" can mounted by gocryptfs v0.9 and higher.
+cppcryptfs 可以挂载 gocryptfs v0.7 及更高版本创建的所有文件系统。同样，由 cppcryptfs 创建的采用“长文件名 = 关”的文件系统也可以由 gocryptfs v0.7 及更高版本挂载。而“长文件名 = 开”的文件系统可以用 gocryptfs v0.9 及更高版本挂载。
 
-The gocryptfs [compatability matrix](https://github.com/rfjakob/gocryptfs/wiki/Compatibility) provides more details. cppcryptfs *requires* the DirIV, EMENames (if encrypted file names and not plaintext file names are used), and GCMIV128 feature flags. It *supports* LongNames and can create filesystems with the flag on and off.
+gocryptfs [兼容性矩阵](https://github.com/rfjakob/gocryptfs/wiki/Compatibility) 提供了更多细节。cppcryptfs *需要* DirIV、EMENames（如果使用加密文件名而不是纯文本文件名）和 GCMIV128 功能标志。它*支持*长文件名，并且可以创建长文件名=开启或关闭状态的文件系统。
 
-Note: cppcryptfs now keeps version number parity with gocryptfs to indicate its compatibility
-with gocryptfs.  cppcryptfs is now version 1.4 and should be able to mount all filesystems created with gocryptfs 1.4.
+注意：cppcryptfs 现在保持与 gocryptfs 等价的版本号来标示与 gocryptfs 的兼容性。cppcryptfs 现在是 1.4 版，所以应该能挂载使用 gocryptfs 1.4 创建的所有文件系统。
 
 
