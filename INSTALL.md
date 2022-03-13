@@ -109,7 +109,7 @@ Visual Studio 2019 中的 vcvarsall.bat 必须在 Windows 的 cmd.exe 中运行，它不适合
 
 然后运行（ActiveState）perl 以为 Visual Studio AMD64 / X86_64 静态构建配置 OpenSSL。
 
-如果您正在进行 32 位构建，使用“VC-WIN32”而不是“VC-WIN64A”。
+如果您正在进行 32 位构建，使用“VC-WIN32”代替“VC-WIN64A”。
 
 
 ```
@@ -155,9 +155,9 @@ cd \git
 git clone https://github.com/bailey27/cppcryptfs.git
 ```
 
-然后在 Windows 资源管理器中打开 c：\\git\\cppcryptfs 目录，双击 cppcryptfs.sln。这样项目就将在 Visual Studio 中加载。
+然后在 Windows 资源管理器中打开 c:\\git\\cppcryptfs 目录，双击 cppcryptfs.sln。这样项目就将在 Visual Studio 中加载。
 
-然后将构建配置更改为“发布”，将目标平台更改为“x64”。如果要构建 32 位版本，选择“x86”。
+然后将构建配置更改为“发布（Release）”，将目标平台更改为“x64”。如果要构建 32 位版本，选择“x86”。
 
 下面是一个屏幕截图，显示了在何处设置构建配置和目标平台（参阅红色下划线）。
 
